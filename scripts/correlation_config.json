@@ -1,0 +1,86 @@
+{
+  "sst": {
+    "variable_name": "sst",
+    "display_name": "SST",
+    "full_name": "Sea Surface Temperature",
+    "units": "°C",
+    "column_renames": {
+      "lat": "lat_bin", 
+      "lon": "lon_bin",
+      "time": "fecha"
+    },
+    "aggregation_method": "max",
+    "coordinate_rounding": true,
+    "coordinate_precision": 5,
+    "correlation_title": "Correlation map catches–SST",
+    "beta_title": "Beta coefficient map (regression slope) - SST",
+    "distribution_title": "Distribution of SST anomalies at selected points",
+    "has_beta_analysis": false,
+    "has_distribution_analysis": false,
+    "has_scatter_plot": false
+  },
+
+  "sss": {
+    "variable_name": "sss",
+    "display_name": "SSS", 
+    "full_name": "Sea Surface Salinity",
+    "units": "PSU",
+    "column_renames": {
+      "latitude": "lat_bin",
+      "longitude": "lon_bin", 
+      "time": "fecha"
+    },
+    "aggregation_method": "mean",
+    "coordinate_rounding": false,
+    "coordinate_precision": null,
+    "grid_offset": 0,
+    "correlation_title": "Mapa de correlación capturas–SSS",
+    "beta_title": "Mapa de coeficiente beta (pendiente regresión) - SSS",
+    "distribution_title": "Distribución de anomalías de SSS en puntos seleccionados", 
+    "has_beta_analysis": false,
+    "has_distribution_analysis": false,
+    "has_scatter_plot": true
+  },
+  "ssd": {
+    "variable_name": "rho_surface",
+    "display_name": "SSD",
+    "full_name": "Sea Surface Density", 
+    "units": "kg/m³",
+    "column_renames": {
+      "latitude": "lat_bin",
+      "longitude": "lon_bin",
+      "time": "fecha" 
+    },
+    "aggregation_method": "max",
+    "coordinate_rounding": false,
+    "coordinate_precision": null,
+    "grid_offset": 0,
+    "correlation_title": "Mapa de correlación capturas–ρ",
+    "beta_title": "Mapa de coeficiente beta (pendiente regresión) - Densidad",
+    "distribution_title": "Distribución de anomalías de densidad en puntos seleccionados",
+    "has_beta_analysis": true,
+    "has_distribution_analysis": true,
+    "has_scatter_plot": false
+  },
+  "default_settings": {
+    "season_weeks": {
+      "season1": {"start": 14, "end": 32},
+      "season2_start": 42,
+      "season2_end": 5
+    },
+    "correlation_threshold": 21,
+    "significance_level": 0.2,
+    "spatial_domain": {
+      "lon_min": -83,
+      "lon_max": -74.5,
+      "lat_min": -16,
+      "lat_max": -4
+    },
+    "bathymetry_settings": {
+      "vmin": -6000,
+      "vmax": 0,
+      "cmap": "Blues_r",
+      "alpha": 0.3
+    }
+  }
+}
