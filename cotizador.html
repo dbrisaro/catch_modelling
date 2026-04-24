@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cotizador Paramétrico — Anchoveta Perú</title>
+<style>
+  :root {
+    --green: #43A047;
+    --dark:  #111111;
+    --black: #141414;
+    --gray:  #555555;
+    --mid:   #9E9E9E;
+    --bg:    #F7F7F5;
+    --card:  #FFFFFF;
+    --border:#E0E0E0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg);
+         color: var(--black); font-size: 13px; }
+
+  /* ── Header ── */
+  header {
+    background: var(--dark); color: white;
+    padding: 12px 24px; display: flex; align-items: center; gap: 16px;
+    border-bottom: 3px solid var(--green);
+  }
+  header h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+  header span { font-size: 11px; color: var(--mid); }
+  .brand { font-size: 12px; font-weight: 700; color: var(--green);
+           margin-left: auto; letter-spacing: 1px; }
+
+  /* ── Layout ── */
+  .layout { display: grid; grid-template-columns: 300px 1fr; gap: 0; height: calc(100vh - 47px); }
+
+  /* ── Sidebar ── */
+  aside {
+    background: var(--card); border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 16px;
+  }
+  .section-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    color: var(--mid); letter-spacing: 0.8px; margin: 16px 0 8px;
+    padding-bottom: 4px; border-bottom: 1px solid var(--border);
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  label { display: block; font-size: 11px; color: var(--gray); margin-bottom: 3px; }
+  select, input[type=number] {
+    width: 100%; border: 1px solid var(--border); border-radius: 4px;
+    padding: 6px 8px; font-size: 12px; color: var(--black);
+    background: white; margin-bottom: 10px;
+  }
+  select:focus, input:focus { outline: none; border-color: var(--green); }
+
+  .slider-row { margin-bottom: 12px; }
+  .slider-row .slider-header { display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--gray); margin-bottom: 4px; }
+  .slider-row .val { font-weight: 700; color: var(--black); font-size: 12px; }
+  input[type=range] {
+    width: 100%; accent-color: var(--green); height: 4px; cursor: pointer;
+  }
+
+  .baseline-box {
+    background: var(--bg); border-radius: 6px; padding: 10px 12px;
+    margin-bottom: 10px; border-left: 3px solid var(--green);
+  }
+  .baseline-box .bl-label { font-size: 10px; color: var(--mid); margin-bottom: 2px; }
+  .baseline-box .bl-val { font-size: 14px; font-weight: 700; color: var(--black); }
+
+  /* ── Main ── */
+  main { display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── KPI strip ── */
+  .kpis {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .kpi { background: var(--card); padding: 12px 16px; }
+  .kpi .kpi-label { font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--mid); margin-bottom: 4px; }
+  .kpi .kpi-val { font-size: 20px; font-weight: 700; color: var(--black); }
+  .kpi .kpi-sub { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .kpi.accent .kpi-val { color: var(--green); }
+
+  /* ── Chart + table ── */
+  .content { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow: hidden; }
+  .panel { padding: 16px; overflow: hidden; display: flex; flex-direction: column; }
+  .panel-title { font-size: 11px; font-weight: 700; color: var(--gray);
+    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+  canvas { border: 1px solid var(--border); border-radius: 4px; background: white;
+           flex: 1; width: 100%; }
+
+  /* ── Table ── */
+  .table-wrap { flex: 1; overflow-y: auto; border: 1px solid var(--border);
+    border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  thead th {
+    background: var(--dark); color: white; padding: 6px 8px;
+    text-align: left; font-weight: 600; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.4px;
+    position: sticky; top: 0; z-index: 1;
+  }
+  tbody tr:nth-child(even) { background: var(--bg); }
+  tbody td { padding: 5px 8px; border-bottom: 1px solid var(--border); }
+  .payout-pos { color: var(--green); font-weight: 700; }
+  .payout-zero { color: var(--mid); }
+  .loss-row { background: #fff8f0 !important; }
+  .sst-warm { color: #c62828; font-weight: 600; }
+  .sst-cool { color: #1565c0; }
+
+  .note { font-size: 10px; color: var(--mid); margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Cotizador Paramétrico — Seguro de Captura de Anchoveta</h1>
+    <span>Centro Norte (11°S – 7.1°S) · MODIS SST 2002–2025 · Datos IHMA 2015–2024</span>
+  </div>
+  <div class="brand">SUYANA</div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside>
+    <div class="section-title">Empresa asegurada</div>
+
+    <label>Empresa</label>
+    <select id="sel-company" onchange="update()"></select>
+
+    <label>Temporada</label>
+    <select id="sel-season" onchange="update()">
+      <option value="both">Ambas (T1 + T2)</option>
+      <option value="T1">T1 — Primera (abr–jul)</option>
+      <option value="T2">T2 — Segunda (nov–dic)</option>
+    </select>
+
+    <div id="baseline-box" class="baseline-box">
+      <div class="bl-label">Captura de referencia (baseline)</div>
+      <div class="bl-val" id="bl-val">— ton</div>
+    </div>
+
+    <div class="section-title">Parámetros del trigger</div>
+
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>Anomalía SST entrada (T<sub>ent</sub>)</span>
+        <span class="val" id="val-entry">0.5 °C</span>
+      </div>
+      <input type="range" id="sl-entry" min="0" max="2.0" step="0.1" value="0.5"
+             oninput="syncSliders();update()">
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>Anomalía SST salida (T<sub>sal</sub>)</span>
+        <span class="val" id="val-exit">2.5 °C</span>
+      </div>
+      <input type="range" id="sl-exit" min="0.5" max="5.0" step="0.1" value="2.5"
+             oninput="syncSliders();update()">
+    </div>
+
+    <div class="section-title">Cobertura y precio</div>
+
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>Cobertura contratada (c)</span>
+        <span class="val" id="val-cov">80 %</span>
+      </div>
+      <input type="range" id="sl-cov" min="10" max="100" step="5" value="80"
+             oninput="update()">
+    </div>
+
+    <label>Precio referencia (USD / ton)</label>
+    <input type="number" id="inp-price" value="300" min="50" max="1000" step="10"
+           oninput="update()">
+
+    <div class="section-title">Gastos y margen</div>
+
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>Loss ratio objetivo</span>
+        <span class="val" id="val-lr">65 %</span>
+      </div>
+      <input type="range" id="sl-lr" min="30" max="90" step="5" value="65"
+             oninput="update()">
+    </div>
+    <p class="note">Carga implícita = prima comercial − prima pura. Prima comercial = AAL / loss ratio.</p>
+
+  </aside>
+
+  <!-- ── Main ── -->
+  <main>
+
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-label">Pago máximo</div>
+        <div class="kpi-val" id="kpi-maxpay">—</div>
+        <div class="kpi-sub" id="kpi-maxpay-usd">—</div>
+      </div>
+      <div class="kpi accent">
+        <div class="kpi-label">Prima pura (AAL)</div>
+        <div class="kpi-val" id="kpi-aal">—</div>
+        <div class="kpi-sub" id="kpi-aal-pct">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Prima comercial</div>
+        <div class="kpi-val" id="kpi-prem">—</div>
+        <div class="kpi-sub" id="kpi-prem-sub">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Carga (gastos + margen)</div>
+        <div class="kpi-val" id="kpi-load">—</div>
+        <div class="kpi-sub" id="kpi-load-sub">—</div>
+      </div>
+    </div>
+
+    <!-- Chart + Table -->
+    <div class="content">
+      <div class="panel">
+        <div class="panel-title">Curva de pago vs anomalía SST</div>
+        <canvas id="chart"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Temporadas históricas (SST 2002–2025)</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Año</th><th>Temp.</th><th>SST (°C)</th>
+                <th>f pago</th><th>Pago (ton)</th><th>Pago (USD)</th>
+                <th>Captura real</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-body"></tbody>
+          </table>
+        </div>
+        <p class="note">Captura real disponible 2015–2024. SST: MODIS AQUA Centro Norte.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Embedded data ────────────────────────────────────────────────────────────
+const DATA = {"companies":{"AUSTRAL GROUP SAA":{"baseline_t1":60618.625,"baseline_t2":56703.333333333336,"actuals":[{"year":2016,"tipo":"T1","actual_ton":18945.0},{"year":2017,"tipo":"T1","actual_ton":33065.0},{"year":2018,"tipo":"T1","actual_ton":120759.0},{"year":2019,"tipo":"T1","actual_ton":40125.0},{"year":2020,"tipo":"T1","actual_ton":90765.0},{"year":2021,"tipo":"T1","actual_ton":106945.0},{"year":2022,"tipo":"T1","actual_ton":66280.0},{"year":2023,"tipo":"T1","actual_ton":8065.0},{"year":2015,"tipo":"T2","actual_ton":10790.0},{"year":2016,"tipo":"T2","actual_ton":91405.0},{"year":2017,"tipo":"T2","actual_ton":13960.0},{"year":2018,"tipo":"T2","actual_ton":91290.0},{"year":2019,"tipo":"T2","actual_ton":39615.0},{"year":2020,"tipo":"T2","actual_ton":97600.0},{"year":2021,"tipo":"T2","actual_ton":66930.0},{"year":2022,"tipo":"T2","actual_ton":56830.0},{"year":2023,"tipo":"T2","actual_ton":41910.0},{"year":2024,"tipo":"T2","actual_ton":90739.8},{"year":2025,"tipo":"T1","actual_ton":62944.9},{"year":2025,"tipo":"T2","actual_ton":72300.0}]},"CFG-COPEINCA":{"baseline_t1":180990.65,"baseline_t2":187683.33333333334,"actuals":[{"year":2016,"tipo":"T1","actual_ton":44135.0},{"year":2017,"tipo":"T1","actual_ton":178511.0},{"year":2018,"tipo":"T1","actual_ton":374490.0},{"year":2019,"tipo":"T1","actual_ton":112264.0},{"year":2020,"tipo":"T1","actual_ton":225175.0},{"year":2021,"tipo":"T1","actual_ton":285130.0},{"year":2022,"tipo":"T1","actual_ton":190473.0},{"year":2023,"tipo":"T1","actual_ton":37747.2},{"year":2015,"tipo":"T2","actual_ton":74305.0},{"year":2016,"tipo":"T2","actual_ton":195368.0},{"year":2017,"tipo":"T2","actual_ton":104265.0},{"year":2018,"tipo":"T2","actual_ton":270515.0},{"year":2019,"tipo":"T2","actual_ton":218680.0},{"year":2020,"tipo":"T2","actual_ton":283960.0},{"year":2021,"tipo":"T2","actual_ton":230615.0},{"year":2022,"tipo":"T2","actual_ton":173070.0},{"year":2023,"tipo":"T2","actual_ton":138372.0},{"year":2024,"tipo":"T2","actual_ton":274289.9},{"year":2025,"tipo":"T1","actual_ton":209037.7},{"year":2025,"tipo":"T2","actual_ton":211312.0}]},"HAYDUK":{"baseline_t1":88069.0,"baseline_t2":76970.66666666667,"actuals":[{"year":2016,"tipo":"T1","actual_ton":31955.0},{"year":2017,"tipo":"T1","actual_ton":77205.0},{"year":2018,"tipo":"T1","actual_ton":185070.0},{"year":2019,"tipo":"T1","actual_ton":66270.0},{"year":2020,"tipo":"T1","actual_ton":101480.0},{"year":2021,"tipo":"T1","actual_ton":101611.0},{"year":2022,"tipo":"T1","actual_ton":124728.0},{"year":2023,"tipo":"T1","actual_ton":16233.0},{"year":2015,"tipo":"T2","actual_ton":33338.0},{"year":2016,"tipo":"T2","actual_ton":120165.0},{"year":2017,"tipo":"T2","actual_ton":50155.0},{"year":2018,"tipo":"T2","actual_ton":114113.0},{"year":2019,"tipo":"T2","actual_ton":10110.0},{"year":2020,"tipo":"T2","actual_ton":107830.0},{"year":2021,"tipo":"T2","actual_ton":110185.0},{"year":2022,"tipo":"T2","actual_ton":89990.0},{"year":2023,"tipo":"T2","actual_ton":56850.0},{"year":2024,"tipo":"T2","actual_ton":123056.0},{"year":2025,"tipo":"T1","actual_ton":89410.1},{"year":2025,"tipo":"T2","actual_ton":76820.0}]},"PESQUERA CENTINELA S.A.C":{"baseline_t1":24946.571428571428,"baseline_t2":22816.714285714286,"actuals":[{"year":2016,"tipo":"T1","actual_ton":2950.0},{"year":2018,"tipo":"T1","actual_ton":29545.0},{"year":2019,"tipo":"T1","actual_ton":17555.0},{"year":2020,"tipo":"T1","actual_ton":39705.0},{"year":2021,"tipo":"T1","actual_ton":41075.0},{"year":2022,"tipo":"T1","actual_ton":37651.0},{"year":2023,"tipo":"T1","actual_ton":6145.0},{"year":2015,"tipo":"T2","actual_ton":570.0},{"year":2018,"tipo":"T2","actual_ton":33335.0},{"year":2019,"tipo":"T2","actual_ton":21475.0},{"year":2020,"tipo":"T2","actual_ton":45310.0},{"year":2021,"tipo":"T2","actual_ton":18385.0},{"year":2022,"tipo":"T2","actual_ton":22412.0},{"year":2023,"tipo":"T2","actual_ton":18230.0},{"year":2024,"tipo":"T2","actual_ton":47442.1}]},"PESQUERA DIAMANTE S.A.":{"baseline_t1":70391.71428571429,"baseline_t2":74726.5,"actuals":[{"year":2016,"tipo":"T1","actual_ton":11115.0},{"year":2017,"tipo":"T1","actual_ton":31320.0},{"year":2018,"tipo":"T1","actual_ton":149107.0},{"year":2019,"tipo":"T1","actual_ton":52525.0},{"year":2020,"tipo":"T1","actual_ton":81365.0},{"year":2021,"tipo":"T1","actual_ton":86980.0},{"year":2022,"tipo":"T1","actual_ton":80330.0},{"year":2015,"tipo":"T2","actual_ton":25735.0},{"year":2016,"tipo":"T2","actual_ton":84947.0},{"year":2017,"tipo":"T2","actual_ton":68945.0},{"year":2018,"tipo":"T2","actual_ton":105295.0},{"year":2019,"tipo":"T2","actual_ton":47020.0},{"year":2020,"tipo":"T2","actual_ton":115035.0},{"year":2021,"tipo":"T2","actual_ton":53320.0},{"year":2022,"tipo":"T2","actual_ton":97515.0},{"year":2024,"tipo":"T2","actual_ton":137646.3},{"year":2025,"tipo":"T1","actual_ton":100299.3},{"year":2025,"tipo":"T2","actual_ton":116427.0}]},"PESQUERA EXALMAR S.A.A.":{"baseline_t1":63795.61330526666,"baseline_t2":54825.42857142857,"actuals":[{"year":2018,"tipo":"T1","actual_ton":78009.0},{"year":2019,"tipo":"T1","actual_ton":64450.0},{"year":2020,"tipo":"T1","actual_ton":72100.0},{"year":2021,"tipo":"T1","actual_ton":71233.0},{"year":2022,"tipo":"T1","actual_ton":80731.0},{"year":2023,"tipo":"T1","actual_ton":16250.68},{"year":2017,"tipo":"T2","actual_ton":43280.0},{"year":2018,"tipo":"T2","actual_ton":93897.0},{"year":2019,"tipo":"T2","actual_ton":48235.0},{"year":2020,"tipo":"T2","actual_ton":90628.0},{"year":2021,"tipo":"T2","actual_ton":64948.0},{"year":2022,"tipo":"T2","actual_ton":22710.0},{"year":2023,"tipo":"T2","actual_ton":20080.0},{"year":2024,"tipo":"T2","actual_ton":61982.1},{"year":2025,"tipo":"T1","actual_ton":19246.4},{"year":2025,"tipo":"T2","actual_ton":98328.0}]},"TASA":{"baseline_t1":122897.5,"baseline_t2":105673.44318873333,"actuals":[{"year":2016,"tipo":"T1","actual_ton":22000.0},{"year":2017,"tipo":"T1","actual_ton":103921.0},{"year":2018,"tipo":"T1","actual_ton":243130.0},{"year":2019,"tipo":"T1","actual_ton":109146.0},{"year":2020,"tipo":"T1","actual_ton":147748.0},{"year":2021,"tipo":"T1","actual_ton":134103.0},{"year":2022,"tipo":"T1","actual_ton":193515.0},{"year":2023,"tipo":"T1","actual_ton":29617.0},{"year":2015,"tipo":"T2","actual_ton":42025.5},{"year":2016,"tipo":"T2","actual_ton":150863.2},{"year":2017,"tipo":"T2","actual_ton":85278.4},{"year":2018,"tipo":"T2","actual_ton":159625.0},{"year":2019,"tipo":"T2","actual_ton":80021.0},{"year":2020,"tipo":"T2","actual_ton":155434.0},{"year":2021,"tipo":"T2","actual_ton":67635.0},{"year":2022,"tipo":"T2","actual_ton":116580.0},{"year":2023,"tipo":"T2","actual_ton":93598.89},{"year":2024,"tipo":"T2","actual_ton":226521.3},{"year":2025,"tipo":"T1","actual_ton":129232.7},{"year":2025,"tipo":"T2","actual_ton":160512.0}]}},"sst":[{"year":2002,"tipo":"T1","sst":-0.907},{"year":2002,"tipo":"T2","sst":0.637},{"year":2003,"tipo":"T1","sst":-1.335},{"year":2003,"tipo":"T2","sst":0.475},{"year":2004,"tipo":"T1","sst":-1.267},{"year":2004,"tipo":"T2","sst":0.198},{"year":2005,"tipo":"T1","sst":-1.075},{"year":2005,"tipo":"T2","sst":-0.317},{"year":2006,"tipo":"T1","sst":-0.524},{"year":2006,"tipo":"T2","sst":0.605},{"year":2007,"tipo":"T1","sst":-1.738},{"year":2007,"tipo":"T2","sst":-1.387},{"year":2008,"tipo":"T1","sst":-0.137},{"year":2008,"tipo":"T2","sst":-0.405},{"year":2009,"tipo":"T1","sst":0.119},{"year":2009,"tipo":"T2","sst":0.512},{"year":2010,"tipo":"T1","sst":-0.664},{"year":2010,"tipo":"T2","sst":-1.015},{"year":2011,"tipo":"T1","sst":0.107},{"year":2011,"tipo":"T2","sst":-0.324},{"year":2012,"tipo":"T1","sst":1.826},{"year":2012,"tipo":"T2","sst":-0.177},{"year":2013,"tipo":"T1","sst":-1.617},{"year":2013,"tipo":"T2","sst":-0.399},{"year":2014,"tipo":"T1","sst":1.045},{"year":2014,"tipo":"T2","sst":-0.134},{"year":2015,"tipo":"T1","sst":2.278},{"year":2015,"tipo":"T2","sst":1.856},{"year":2016,"tipo":"T1","sst":0.358},{"year":2016,"tipo":"T2","sst":0.441},{"year":2017,"tipo":"T1","sst":0.848},{"year":2017,"tipo":"T2","sst":-0.343},{"year":2018,"tipo":"T1","sst":-0.9},{"year":2018,"tipo":"T2","sst":1.232},{"year":2019,"tipo":"T1","sst":-0.159},{"year":2019,"tipo":"T2","sst":0.741},{"year":2020,"tipo":"T1","sst":-0.649},{"year":2020,"tipo":"T2","sst":-0.762},{"year":2021,"tipo":"T1","sst":-0.644},{"year":2021,"tipo":"T2","sst":-0.93},{"year":2022,"tipo":"T1","sst":-2.195},{"year":2022,"tipo":"T2","sst":-0.299},{"year":2023,"tipo":"T1","sst":3.958},{"year":2023,"tipo":"T2","sst":1.126},{"year":2024,"tipo":"T1","sst":-0.829},{"year":2024,"tipo":"T2","sst":-0.128},{"year":2025,"tipo":"T1","sst":-0.071},{"year":2025,"tipo":"T2","sst":-0.181}]};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const fmt  = n => n == null ? '—' : n.toLocaleString('es-AR', {maximumFractionDigits:0});
+const fmtK = n => n == null ? '—' : (n >= 1e6 ? (n/1e6).toFixed(2)+'M' : (n/1e3).toFixed(0)+'k');
+const fmtP = n => n == null ? '—' : (n*100).toFixed(1)+'%';
+
+function payoutFrac(sst, entry, exit) {
+  if (sst <= entry) return 0;
+  return Math.min(1, (sst - entry) / (exit - entry));
+}
+
+function olsLossFrac(sst, beta) {
+  if (sst <= 0) return 0;
+  return Math.max(0, 1 - Math.exp(beta * sst));
+}
+
+// ── Init company selector ─────────────────────────────────────────────────────
+const sel = document.getElementById('sel-company');
+Object.keys(DATA.companies).filter(c => c !== 'Pesquera Diamante S.A.').forEach(c => {
+  const opt = document.createElement('option');
+  opt.value = c; opt.textContent = c;
+  sel.appendChild(opt);
+});
+
+// ── Sync slider constraints ───────────────────────────────────────────────────
+function syncSliders() {
+  const entry = parseFloat(document.getElementById('sl-entry').value);
+  const exit  = parseFloat(document.getElementById('sl-exit').value);
+  if (exit <= entry) {
+    document.getElementById('sl-exit').value = (entry + 0.1).toFixed(1);
+  }
+  document.getElementById('val-entry').textContent = parseFloat(document.getElementById('sl-entry').value).toFixed(1) + ' °C';
+  document.getElementById('val-exit').textContent  = parseFloat(document.getElementById('sl-exit').value).toFixed(1) + ' °C';
+  document.getElementById('val-cov').textContent   = document.getElementById('sl-cov').value + ' %';
+}
+
+// ── Main update function ──────────────────────────────────────────────────────
+function update() {
+  syncSliders();
+
+  const co      = document.getElementById('sel-company').value;
+  const season  = document.getElementById('sel-season').value;
+  const entry   = parseFloat(document.getElementById('sl-entry').value);
+  const exit_   = parseFloat(document.getElementById('sl-exit').value);
+  const cov     = parseFloat(document.getElementById('sl-cov').value) / 100;
+  const price   = parseFloat(document.getElementById('inp-price').value) || 300;
+  const lr      = parseFloat(document.getElementById('sl-lr').value) / 100;
+  const beta    = -0.816;
+
+  document.getElementById('val-lr').textContent = (lr * 100).toFixed(0) + ' %';
+
+  const co_data = DATA.companies[co];
+
+  // Baseline per selected season
+  let baseline = 0;
+  if (season === 'T1')   baseline = co_data.baseline_t1 || 0;
+  else if (season === 'T2') baseline = co_data.baseline_t2 || 0;
+  else baseline = (co_data.baseline_t1 || 0) + (co_data.baseline_t2 || 0);
+
+  document.getElementById('bl-val').textContent = fmt(Math.round(baseline)) + ' ton';
+
+  const maxPay  = baseline * cov;
+  const maxUSD  = maxPay * price;
+
+  // ── SST filter ──
+  const sst_map = {};
+  DATA.sst.forEach(r => { sst_map[r.year + '_' + r.tipo] = r.sst; });
+
+  // Get relevant SST seasons
+  let sst_seasons = [];
+  if (season === 'both') {
+    // Annual: sum payout of T1+T2 per year
+    const years = [...new Set(DATA.sst.map(r => r.year))].sort();
+    years.forEach(yr => {
+      const s1 = sst_map[yr + '_T1'];
+      const s2 = sst_map[yr + '_T2'];
+      const b1 = co_data.baseline_t1 || 0;
+      const b2 = co_data.baseline_t2 || 0;
+      if (s1 != null) sst_seasons.push({year: yr, tipo: 'T1', sst: s1, baseline_s: b1});
+      if (s2 != null) sst_seasons.push({year: yr, tipo: 'T2', sst: s2, baseline_s: b2});
+    });
+  } else {
+    const b_s = season === 'T1' ? co_data.baseline_t1 : co_data.baseline_t2;
+    DATA.sst.filter(r => r.tipo === season).forEach(r => {
+      sst_seasons.push({year: r.year, tipo: r.tipo, sst: r.sst, baseline_s: b_s || 0});
+    });
+  }
+
+  // Compute payouts
+  sst_seasons.forEach(r => {
+    r.f     = payoutFrac(r.sst, entry, exit_);
+    r.paton = r.baseline_s * r.f * cov;
+    r.pausd = r.paton * price;
+    // actual catch
+    const act = co_data.actuals.find(a => a.year === r.year && a.tipo === r.tipo);
+    r.actual  = act ? act.actual_ton : null;
+  });
+
+  // AAL: mean payout across all SST seasons (annual = sum T1+T2 per year)
+  let aal_ton, aal_pct;
+  if (season === 'both') {
+    const years = [...new Set(sst_seasons.map(r => r.year))];
+    const annual = years.map(yr => {
+      const rows = sst_seasons.filter(r => r.year === yr);
+      return rows.reduce((s, r) => s + r.paton, 0);
+    });
+    aal_ton = annual.reduce((s, v) => s + v, 0) / annual.length;
+    aal_pct = aal_ton / baseline;
+  } else {
+    aal_ton = sst_seasons.reduce((s, r) => s + r.paton, 0) / sst_seasons.length;
+    aal_pct = aal_ton / (baseline || 1);
+  }
+
+  const pure_prem_usd  = aal_ton * price;
+  const comm_prem_usd  = pure_prem_usd / lr;
+  const load_usd       = comm_prem_usd - pure_prem_usd;
+  const load_pct       = 1 - lr;
+
+  // ── KPIs ──
+  document.getElementById('kpi-maxpay').textContent = fmtK(maxPay) + ' ton';
+  document.getElementById('kpi-maxpay-usd').textContent = 'USD ' + fmtK(maxUSD);
+  document.getElementById('kpi-aal').textContent = 'USD ' + fmtK(pure_prem_usd) + '/año';
+  document.getElementById('kpi-aal-pct').textContent = fmtP(aal_pct) + ' del baseline · ' + fmtK(aal_ton) + ' ton';
+  document.getElementById('kpi-prem').textContent = 'USD ' + fmtK(comm_prem_usd) + '/año';
+  document.getElementById('kpi-prem-sub').textContent = 'tasa ' + fmtP(comm_prem_usd / (maxUSD || 1)) + ' s/ suma asegurada';
+  document.getElementById('kpi-load').textContent = 'USD ' + fmtK(load_usd) + '/año';
+  document.getElementById('kpi-load-sub').textContent = fmtP(load_pct) + ' de la prima comercial';
+
+  // ── Table ──
+  const tbody = document.getElementById('tbl-body');
+  tbody.innerHTML = '';
+  // Sort by year desc then tipo
+  const sorted = [...sst_seasons].sort((a, b) => b.year - a.year || a.tipo.localeCompare(b.tipo));
+  sorted.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r.f > 0) tr.classList.add('loss-row');
+    const sstClass = r.sst >= entry ? 'sst-warm' : 'sst-cool';
+    const actStr   = r.actual != null ? fmt(Math.round(r.actual)) + ' ton' : '—';
+    tr.innerHTML = `
+      <td>${r.year}</td>
+      <td>${r.tipo}</td>
+      <td class="${sstClass}">${r.sst.toFixed(2)}</td>
+      <td>${r.f > 0 ? fmtP(r.f) : '<span class="payout-zero">0%</span>'}</td>
+      <td class="${r.f > 0 ? 'payout-pos' : 'payout-zero'}">${r.f > 0 ? fmt(Math.round(r.paton)) : '—'}</td>
+      <td class="${r.f > 0 ? 'payout-pos' : 'payout-zero'}">${r.f > 0 ? 'USD ' + fmtK(r.pausd) : '—'}</td>
+      <td>${actStr}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // ── Chart ──
+  drawChart(baseline, entry, exit_, cov, beta, price, sst_seasons);
+}
+
+// ── Canvas chart ─────────────────────────────────────────────────────────────
+function drawChart(baseline, entry, exit_, cov, beta, price, sst_seasons) {
+  const canvas = document.getElementById('chart');
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.offsetWidth;
+  const H = canvas.offsetHeight;
+  canvas.width  = W;
+  canvas.height = H;
+
+  const pad = {l: 64, r: 20, t: 20, b: 56};
+  const cW  = W - pad.l - pad.r;
+  const cH  = H - pad.t - pad.b;
+
+  // X: SST -1.5 to 5.0
+  const xMin = -1.5, xMax = 5.2;
+  const yMax = baseline * cov * 1.15;
+
+  function toX(v) { return pad.l + (v - xMin) / (xMax - xMin) * cW; }
+  function toY(v) { return pad.t + cH - v / yMax * cH; }
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const y = pad.t + g * cH / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+  }
+
+  // Zero SST line
+  ctx.strokeStyle = '#cccccc'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(toX(0), pad.t); ctx.lineTo(toX(0), pad.t + cH); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Entry / Exit vertical lines
+  const vlines = [{v: entry, c: '#1976D2', lbl: 'T_ent ' + entry.toFixed(1) + '°C'},
+                  {v: exit_,  c: '#D32F2F', lbl: 'T_sal ' + exit_.toFixed(1) + '°C'}];
+  vlines.forEach(({v, c, lbl}) => {
+    const x = toX(v);
+    ctx.strokeStyle = c; ctx.lineWidth = 1.5; ctx.setLineDash([5,3]);
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + cH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = c; ctx.font = '10px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(lbl, x, pad.t + cH + 28);
+  });
+
+  // OLS reference curve (grey dashed)
+  ctx.strokeStyle = '#aaaaaa'; ctx.lineWidth = 1.5; ctx.setLineDash([6,3]);
+  ctx.beginPath();
+  let first = true;
+  for (let sst = -1.5; sst <= 5.2; sst += 0.05) {
+    const y_val = baseline * cov * olsLossFrac(sst, beta);
+    const px = toX(sst), py = toY(y_val);
+    first ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    first = false;
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Ramp curve (green solid)
+  ctx.strokeStyle = '#43A047'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); first = true;
+  for (let sst = -1.5; sst <= 5.2; sst += 0.05) {
+    const y_val = baseline * cov * payoutFrac(sst, entry, exit_);
+    const px = toX(sst), py = toY(y_val);
+    first ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    first = false;
+  }
+  ctx.stroke();
+
+  // Fill under ramp
+  ctx.beginPath();
+  ctx.moveTo(toX(entry), toY(0));
+  for (let sst = entry; sst <= 5.2; sst += 0.05) {
+    ctx.lineTo(toX(sst), toY(baseline * cov * payoutFrac(sst, entry, exit_)));
+  }
+  ctx.lineTo(toX(5.2), toY(0));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(67,160,71,0.08)'; ctx.fill();
+
+  // Historical dots
+  sst_seasons.forEach(r => {
+    const isWarm  = r.sst >= entry;
+    const isNino  = (r.year === 2015 || r.year === 2023);
+    const px = toX(r.sst);
+    const py = toY(r.paton);
+    ctx.beginPath();
+    ctx.arc(px, py, isNino ? 6 : 4, 0, 2 * Math.PI);
+    ctx.fillStyle   = isNino ? '#D32F2F' : (isWarm ? '#FF8F00' : '#90A4AE');
+    ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5;
+    ctx.fill(); ctx.stroke();
+    if (isNino || (r.sst > 1.5)) {
+      ctx.fillStyle = '#333'; ctx.font = '9px Arial'; ctx.textAlign = 'left';
+      ctx.fillText(r.year + ' ' + r.tipo, px + 7, py + 3);
+    }
+  });
+
+  // Axes
+  ctx.strokeStyle = '#cccccc'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + cH);
+  ctx.lineTo(pad.l + cW, pad.t + cH);
+  ctx.stroke();
+
+  // Y axis labels
+  ctx.fillStyle = '#777'; ctx.font = '10px Arial'; ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const val = yMax * (1 - i / 4);
+    ctx.fillText(fmtK(val), pad.l - 6, pad.t + i * cH / 4 + 3);
+  }
+  ctx.save(); ctx.translate(14, pad.t + cH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center'; ctx.font = '10px Arial'; ctx.fillStyle = '#555';
+  ctx.fillText('Pago (ton)', 0, 0); ctx.restore();
+
+  // X axis labels
+  ctx.fillStyle = '#777'; ctx.font = '10px Arial'; ctx.textAlign = 'center';
+  [-1, 0, 1, 2, 3, 4, 5].forEach(v => {
+    ctx.fillText(v + '°C', toX(v), pad.t + cH + 14);
+  });
+  ctx.fillText('Anomalía SST (°C)', pad.l + cW / 2, pad.t + cH + 36);
+
+  // Legend
+  const legX = pad.l + cW - 170, legY = pad.t + 10;
+  const legItems = [
+    {c: '#43A047', dash: false, lbl: 'Ramp lineal (pago)'},
+    {c: '#aaaaaa', dash: true,  lbl: 'OLS referencia'},
+    {c: '#FF8F00', dot: true,   lbl: 'Temporada histórica'},
+    {c: '#D32F2F', dot: true,   lbl: 'El Niño (2015, 2023)'},
+  ];
+  legItems.forEach((item, i) => {
+    const y = legY + i * 16;
+    if (item.dot) {
+      ctx.beginPath(); ctx.arc(legX + 8, y, 4, 0, 2*Math.PI);
+      ctx.fillStyle = item.c; ctx.fill();
+    } else {
+      ctx.strokeStyle = item.c; ctx.lineWidth = 2;
+      item.dash ? ctx.setLineDash([5,3]) : ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(legX, y); ctx.lineTo(legX+16, y); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.fillStyle = '#333'; ctx.font = '10px Arial'; ctx.textAlign = 'left';
+    ctx.fillText(item.lbl, legX + 20, y + 3);
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+update();
+window.addEventListener('resize', update);
+</script>
+</body>
+</html>
