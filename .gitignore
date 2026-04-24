@@ -1,0 +1,23 @@
+# Generated outputs
+outputs/
+
+# Jupyter
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Large binary / compiled files
+*.pdf
+*.pptx
+
+# Claude tooling (local only)
+CLAUDE.md
+SKILL.md
+
+# OS
+.DS_Store

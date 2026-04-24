@@ -1,0 +1,498 @@
+% ============================================================
+%  Suyana — Seguro Paramétrico Anchoveta Perú
+%  Beamer presentation — Abril 2026
+% ============================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{etoolbox}
+\usepackage{pgfpages}
+
+% Uncomment ONE variant for presenter build; leave all commented for audience PDF.
+% \setbeameroption{show notes on second screen=right}
+% \setbeameroption{show only notes}
+
+% ── Brand colors ────────────────────────────────────────────
+\definecolor{sgreen}{HTML}{43A047}
+\definecolor{sblack}{HTML}{141414}
+\definecolor{sdark}{HTML}{111111}
+\definecolor{sgray}{HTML}{555555}
+\definecolor{smidgray}{HTML}{9E9E9E}
+
+% ── Theme ────────────────────────────────────────────────────
+\usetheme{default}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamercolor{frametitle}{fg=sblack, bg=white}
+\setbeamercolor{structure}{fg=sgreen}
+\setbeamercolor{normal text}{fg=sblack}
+\setbeamercolor{itemize item}{fg=sgreen}
+\setbeamercolor{itemize subitem}{fg=sgreen}
+\setbeamercolor{enumerate item}{fg=sgreen}
+
+% ── Density controls ─────────────────────────────────────────
+\setbeamerfont{itemize/enumerate body}{size=\footnotesize}
+\setbeamerfont{itemize/enumerate subbody}{size=\scriptsize}
+\setbeamerfont{block body}{size=\footnotesize}
+
+\AtBeginEnvironment{itemize}{%
+  \setlength{\itemsep}{3pt}\setlength{\parskip}{0pt}\setlength{\topsep}{2pt}%
+}
+\AtBeginEnvironment{enumerate}{%
+  \setlength{\itemsep}{3pt}\setlength{\parskip}{0pt}\setlength{\topsep}{2pt}%
+}
+
+% ── Image path ───────────────────────────────────────────────
+% Set \BRAND to the directory containing logo_black.png and logo_white.png
+\newcommand{\BRAND}{brand}
+\newcommand{\IMGPATH}{/home/jupyter-daniela/peru_catch_modeling/outputs}
+
+% ── Headline ─────────────────────────────────────────────────
+\setbeamertemplate{headline}{%
+  \color{sgreen}\rule{\paperwidth}{1.5pt}\par
+  \vspace{4pt}%
+  \hfill
+  \IfFileExists{\BRAND/logo_black.png}{%
+    \includegraphics[height=0.30cm]{\BRAND/logo_black.png}%
+  }{\textcolor{sgreen}{\tiny SUYANA}}%
+  \hspace{6pt}%
+  \vspace{2pt}%
+}
+
+% ── Frametitle ───────────────────────────────────────────────
+\setbeamertemplate{frametitle}{%
+  \vspace{4pt}%
+  {\large\textbf{\insertframetitle}}%
+  \ifx\insertframesubtitle\empty\else\\[1pt]{\small\color{sgray}\insertframesubtitle}\fi%
+  \par\vspace{4pt}%
+  {\color{smidgray}\hrule height 0.4pt}%
+  \vspace{4pt}%
+}
+
+% ── Footline ─────────────────────────────────────────────────
+\setbeamertemplate{footline}{%
+  {\color{smidgray}\hrule height 0.4pt}%
+  \vspace{2pt}%
+  \hspace{6pt}{\tiny\color{smidgray}Suyana\ \ |\ \ Seguro Paramétrico Anchoveta Perú\ \ |\ \ Abril 2026}%
+  \hfill{\tiny\color{smidgray}\insertframenumber\,/\,\inserttotalframenumber}\hspace{6pt}%
+  \vspace{3pt}%
+}
+
+% ── Section divider ──────────────────────────────────────────
+\newcommand{\secslide}[2]{%
+  {%
+  \setbeamertemplate{headline}{}%
+  \setbeamertemplate{footline}{}%
+  \setbeamercolor{background canvas}{bg=sdark}%
+  \begin{frame}[plain]%
+    \vspace{1.0cm}%
+    \hspace{0.4cm}{\color{sgreen}\fontsize{40}{40}\selectfont\textbf{#1}}%
+    \par\vspace{0.3cm}%
+    \hspace{0.4cm}{\color{white}\Large\textbf{\MakeUppercase{#2}}}%
+    \vfill%
+    \hfill
+    \IfFileExists{\BRAND/logo_white.png}{%
+      \includegraphics[height=0.32cm]{\BRAND/logo_white.png}%
+    }{\textcolor{sgreen}{\tiny SUYANA}}%
+    \hspace{8pt}%
+    \vspace{6pt}%
+  \end{frame}%
+  }%
+}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ── Title slide ─────────────────────────────────────────────
+{
+\setbeamertemplate{headline}{}
+\setbeamertemplate{footline}{}
+\setbeamercolor{background canvas}{bg=sdark}
+\begin{frame}[plain]
+  \vspace{1.0cm}
+  \hspace{0.4cm}
+  \IfFileExists{\BRAND/logo_white.png}{%
+    \includegraphics[height=0.46cm]{\BRAND/logo_white.png}%
+  }{\textcolor{sgreen}{\normalsize\textbf{SUYANA}}}
+  \par\vspace{0.6cm}
+  \hspace{0.4cm}{\color{white}\LARGE\textbf{Seguro Paramétrico de Captura de Anchoveta}}
+  \par\vspace{0.2cm}
+  \hspace{0.4cm}{\color{smidgray}\normalsize Modelado SST--Captura y Diseño del Trigger\ \ |\ \ Perú}
+  \par\vspace{0.5cm}
+  \hspace{0.4cm}{\color{sgray}\small Abril 2026\ \ $\cdot$\ \ Confidencial}
+\end{frame}
+}
+\note{Presentación de resultados del pipeline completo de modelado. Cubrir en ~40 min.}
+
+% ── Agenda ───────────────────────────────────────────────────
+\begin{frame}{Agenda}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+      \textbf{\color{sgreen}01}\ \ Datos y cobertura\\[6pt]
+      \textbf{\color{sgreen}02}\ \ Contexto oceanográfico\\[6pt]
+      \textbf{\color{sgreen}03}\ \ Relación SST--Captura
+    \column{0.48\textwidth}
+      \textbf{\color{sgreen}04}\ \ Diseño del trigger\\[6pt]
+      \textbf{\color{sgreen}05}\ \ Probabilidad anual de excedencia\\[6pt]
+      \textbf{\color{sgreen}06}\ \ Análisis por empresa
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\secslide{01}{Datos y Cobertura}
+% ============================================================
+
+% ── Fuentes de datos ─────────────────────────────────────────
+\begin{frame}{Fuentes de datos}
+  \framesubtitle{Tres fuentes integradas por interpolación espacio-temporal al nivel de cala}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{p{2.8cm}p{3.5cm}p{2.2cm}p{2.8cm}}
+    \toprule
+    \textbf{Fuente} & \textbf{Variable principal} & \textbf{Período} & \textbf{Resolución}\\
+    \midrule
+    IHMA (calas) & Captura declarada (ton) & 2015--2024 & Por evento de pesca\\
+    MODIS AQUA & Anomalía SST diaria & 2002--2026 & $\sim$4 km diario\\
+    HYCOM & Temp.\ y salinidad subsup. & 2015--2024 & $1/12^\circ$ diario\\
+    \bottomrule
+  \end{tabular}
+  \medskip
+  {\footnotesize \textbf{Variable final seleccionada:} anomalía MODIS SST ($T'$) --- descartadas salinidad HYCOM (señal secundaria), clorofila (alta brecha por nubosidad) y temperatura subsuperficial HYCOM (colineal con SST MODIS).}
+\end{frame}
+\note{HYCOM fue evaluado pero descartado. La anomalía SST MODIS tiene el registro más largo y la cobertura espacial más fina para la zona de pesca. Ver Sección 2 del documento de decisiones metodológicas.}
+
+% ── Alcance espacial ─────────────────────────────────────────
+\begin{frame}{Variables incluidas y excluidas}
+  \begin{columns}[t]
+    \column{0.50\textwidth}
+      \textbf{\color{sgreen}Incluida en el modelo}
+      \begin{itemize}
+        \item \textbf{Anomalía SST MODIS} --- señal más fuerte y robusta; cubre 2002--2026
+        \item Índice El Niño 1+2 --- solo como contexto descriptivo (paso 09), no como regresor
+      \end{itemize}
+      \smallskip
+      \textbf{\color{sgreen}Decisión de temporalidad}
+      \begin{itemize}
+        \item Dos temporadas: T1 (abr--jul) y T2 (nov--dic)
+        \item Períodos fuera de temporada excluidos por regulación IMARPE
+      \end{itemize}
+    \column{0.46\textwidth}
+      \textbf{Descartadas}
+      \begin{itemize}
+        \item SST cruda (confunde efectos espaciales con anomalías)
+        \item Temp./salinidad HYCOM (colineal; menor cobertura)
+        \item Clorofila MODIS (alta patchiness; brechas por nubes)
+        \item Término cuadrático $T'^{2}$ (sin mejora en $R^{2}$ a nivel temporada)
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+% ── Densidad de pesca por temporada ──────────────────────────
+\begin{frame}{Densidad de calas por temporada (IHMA, 2015--2024)}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]{\IMGPATH/step08_vessel_density_by_season.png}
+  \end{center}
+  {\scriptsize Concentración de calas a lo largo del corredor peruano. T1 (abr--jul) y T2 (nov--dic).}
+\end{frame}
+\note{La zona de pesca se concentra entre $7^\circ$S y $16^\circ$S a lo largo de la plataforma continental. Esto motiva el foco en la región Centro Norte para el trigger.}
+
+% ── Densidad de pesca por empresa ────────────────────────────
+\begin{frame}{Densidad de calas por empresa (IHMA, 2015--2024)}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]{\IMGPATH/step08_vessel_density_by_company.png}
+  \end{center}
+  {\scriptsize Distribución geográfica por empresa. Varias flotas concentran actividad en subzonas específicas del corredor.}
+\end{frame}
+
+% ============================================================
+\secslide{02}{Contexto Oceanográfico}
+% ============================================================
+
+
+% ── Mapas SST T1 ─────────────────────────────────────────────
+\begin{frame}{Anomalía SST promedio T1 (MODIS AQUA, abr--jul, 2002--2024)}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.76\textheight,keepaspectratio]{\IMGPATH/step17_sst_t1_maps.png}
+  \end{center}
+\end{frame}
+
+% ── Mapas SST T2 ─────────────────────────────────────────────
+\begin{frame}{Anomalía SST promedio T2 (MODIS AQUA, nov--dic, 2002--2024)}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.76\textheight,keepaspectratio]{\IMGPATH/step17_sst_t2_maps.png}
+  \end{center}
+\end{frame}
+
+% ── Coherencia espacial SST ridge ────────────────────────────
+\begin{frame}{Distribución SST por banda de latitud (10 bandas, 2002--2026)}
+  \begin{columns}[T]
+    \column{0.82\textwidth}
+      \includegraphics[width=\linewidth,height=0.80\textheight,keepaspectratio]{\IMGPATH/step16_sst_ridge.png}
+    \column{0.16\textwidth}
+      \vspace{0.5cm}
+      \hspace*{-3cm}\begin{minipage}{3.8cm}
+      {\tiny\textbf{Resultados}
+      \begin{itemize}
+        \item 285 meses MODIS AQUA
+        \item Bandas $8^\circ$--$14^\circ$S: señal homogenea
+        \item El Niño 2015--16 y 2023 coherentes en toda la costa
+        \item $7^\circ$--$6^\circ$S mas variable
+      \end{itemize}
+      \textbf{Implicancia:} señal compartida -- trigger unico valido.}
+      \end{minipage}
+  \end{columns}
+\end{frame}
+
+% ── Correlaciones SST entre bandas ───────────────────────────
+\begin{frame}{Coherencia espacial del SST: correlaciones entre bandas}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{\IMGPATH/step16_sst_correlations.png}
+    \column{0.41\textwidth}
+      \textbf{Resultados principales}
+      \begin{itemize}
+        \item Mediana $r = 0{,}81$ (285 meses)
+        \item Mínimo $r = 0{,}54$ ($7$--$6^\circ$S con $16$--$15^\circ$S)
+        \item Máximo $r = 0{,}96$ ($10$--$9^\circ$S con $9$--$8^\circ$S)
+        \item 80\% de pares con $r > 0{,}70$
+      \end{itemize}
+      \smallskip
+      {\scriptsize\textbf{Decisión:} el calentamiento durante El Niño afecta simultáneamente toda la costa peruana. Un índice SST de área amplia captura la señal compartida sin necesidad de triggers diferenciados por subzona.}
+  \end{columns}
+\end{frame}
+\note{Las correlaciones más bajas involucran la banda $7$--$6^\circ$S (zona de transición ecuatorial, menos dominada por la Corriente Humboldt). Aún así r=0.54 confirma señal común. Ver Sección 9 de decisiones metodológicas.}
+
+% ============================================================
+\secslide{03}{Relación SST--Captura}
+% ============================================================
+
+% ── Especificación del modelo ─────────────────────────────────
+\begin{frame}{Especificación del modelo}
+  \framesubtitle{Modelo M1: semi-log OLS captura total; Modelo M2: semi-log OLS CPUE}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Modelo M1 (captura)}
+      \[
+        \log(C_{e,s}) = \alpha + \beta\, T'_{e,s} + \varepsilon
+      \]
+      \textbf{Modelo M2 (CPUE)}
+      \[
+        \log\!\left(\tfrac{C_{e,s}}{E_{e,s}}\right) = \alpha + \beta\, T'_{e,s} + \varepsilon
+      \]
+      {\scriptsize\textbf{Símbolos:} $C_{e,s}$ = captura (ton); $E_{e,s}$ = esfuerzo VMS (h); $T'_{e,s}$ = anomalía media SST ($^\circ$C); $\alpha$ = intercepto; $\beta$ = elasticidad; $\varepsilon$ = residuo.}
+    \column{0.44\textwidth}
+      \textbf{Decisiones clave}
+      \begin{itemize}
+        \item empresa$\times$temporada minimiza sesgo de atenuación
+        \item M1: 2015--2024; M2: 2017--2022 (cobertura VMS)
+        \item Filtro IQR en calas individuales antes de agregar
+      \end{itemize}
+      \smallskip
+      {\scriptsize\textbf{Filtro IQR:} calas con captura fuera de $[Q_1 - 1{,}5\,\text{IQR},\ Q_3 + 1{,}5\,\text{IQR}]$ excluidas antes de cualquier agregación.}
+  \end{columns}
+\end{frame}
+\note{El filtro IQR se aplica antes de cualquier agregación. M2 requiere archivos SISESAT que solo están disponibles para 2017-2022. La interpretación de beta: un grado extra de anomalía cálida reduce la captura en exp(beta)-1 × 100\%.}
+
+
+% ── Betas por nivel de agregación ────────────────────────────
+\begin{frame}{Beta por nivel de agregación (M1 y M2, región Centro)}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]{\IMGPATH/step11_ols_betas.png}
+  \end{center}
+  {\scriptsize Diario $\to$ temporada: beta se vuelve más negativo al reducirse el sesgo de atenuación. Empresa$\times$temporada seleccionado.}
+\end{frame}
+
+% ============================================================
+\secslide{04}{Diseño del Trigger}
+% ============================================================
+
+% ── Selección zona espacial ──────────────────────────────────
+\begin{frame}{Selección de la zona del trigger: comparación espacial}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]{\IMGPATH/step15_spatial_comparison.png}
+  \end{center}
+  {\tiny OLS log(captura) $\sim$ anomalía SST a nivel empresa$\times$temporada. \textbf{Centro Norte} ($-11^\circ$ a $-7{,}1^\circ$S) tiene el mayor $R^{2}$ (0{,}261) y beta más negativo significativo ($-0{,}816$, $p<0{,}001$). Norte: no significativo ($p=0{,}058$). Centro Sur: sin relación ($R^{2}=0{,}002$, $p=0{,}65$).}
+\end{frame}
+
+% ── Curvas de pago ───────────────────────────────────────────
+\begin{frame}{Curvas de pago: ramp lineal vs. step}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.60\textheight,keepaspectratio]{\IMGPATH/step15_payout_curves.png}
+  \end{center}
+  {\tiny Línea punteada gris = curva exponencial implícita por OLS (beta $= -0{,}816$, referencia). \textbf{Ramp lineal} (recomendado): entrada en $0{,}5^\circ$C, máximo en $2{,}5^\circ$C. \textbf{Step}: pago binario al p90 ($0{,}96^\circ$C). El step sobreindemniza a anomalías bajas (100\% al p90, OLS implica 62\%); el ramp sigue más de cerca la pérdida real.}
+\end{frame}
+
+% ── Fórmula de pago ──────────────────────────────────────────
+\begin{frame}{Fórmula de pago: ramp lineal}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Fracción de pago}
+      \[
+        f = \operatorname{clip}\!\left(\frac{T' - T_{\text{ent}}}{T_{\text{sal}} - T_{\text{ent}}},\ 0,\ 1\right)
+      \]
+      \textbf{Pago en toneladas}
+      \[
+        P = B \times f \times c
+      \]
+      \smallskip
+      {\scriptsize\textbf{Símbolos:} $T'$ = anomalía media SST en la temporada ($^\circ$C); $T_{\text{ent}} = 0{,}5^\circ$C = umbral de activación; $T_{\text{sal}} = 2{,}5^\circ$C = umbral de pago máximo; $f \in [0,1]$ = fracción del pago máximo; $B$ = captura de referencia de la empresa (ton); $c$ = cobertura contratada; $P$ = pago en ton equivalente.}
+    \column{0.44\textwidth}
+      \textbf{Decisiones de diseño}
+      \begin{itemize}
+        \item Beta OLS \emph{no} entra en la fórmula; solo en calibración
+        \item $B$ varía por empresa y temporada (T1 / T2)
+        \item Trigger SST = índice de área (toda la flota, Centro Norte): objetivo, no manipulable
+      \end{itemize}
+  \end{columns}
+\end{frame}
+\note{El trigger es el índice SST del área: objetivo, verificable, no influenciable por una empresa individual. La formula de pago es estándar para todos los clientes; solo B cambia por empresa.}
+
+% ── Ejemplos de cálculo ──────────────────────────────────────
+\begin{frame}{Ejemplos de cálculo del pago}
+  \framesubtitle{Tres regímenes históricos --- fórmula aplicada con los mismos parámetros}
+  \begin{columns}[t]
+    \column{0.32\textwidth}
+      \textbf{Ej.\ 1 --- T1-2019 (sin evento)}\\[2pt]
+      \scriptsize
+      \textit{SST normal, sin pago.}
+      \begin{enumerate}
+        \item $T' = -0{,}3^\circ$C
+        \item $T' < T_{\text{ent}} = 0{,}5^\circ$C
+        \item $f = \operatorname{clip}(\ldots) = 0$
+        \item $P = B \times 0 \times c$
+        \item $\mathbf{Pago = 0}$
+      \end{enumerate}
+      \smallskip
+      Sin pago; cuota regulatoria no está cubierta.
+    \column{0.32\textwidth}
+      \textbf{Ej.\ 2 --- T2-2018 (falso trigger)}\\[2pt]
+      \scriptsize
+      \textit{SST leve; empresas sobre línea base.}
+      \begin{enumerate}
+        \item $T' = +0{,}94^\circ$C
+        \item $f = \tfrac{0{,}44}{2{,}0} = 0{,}22$
+        \item $P = 132\,000 \times 0{,}22 \approx 29\,000$ ton
+        \item $\mathbf{22\%}$ pagado, sin pérdida real
+      \end{enumerate}
+      Ramp limita sobreindemnización; step pagaría 100\%.
+    \column{0.32\textwidth}
+      \textbf{Ej.\ 3 --- T1-2023 (El Niño)}\\[2pt]
+      \scriptsize
+      \textit{Pérdida severa; alta cobertura.}
+      \begin{enumerate}
+        \item $T' = +2{,}01^\circ$C
+        \item $f = \tfrac{1{,}51}{2{,}0} = 0{,}755$
+        \item $P = 132\,000 \times 0{,}755 \approx 100\,000$ ton
+        \item Pérdida real: $\sim124\,000$ ton
+        \item $\mathbf{Cobertura\ 80\%}$
+      \end{enumerate}
+      Descubierto (20\%) porque $T' < T_{\text{sal}} = 2{,}5$.
+  \end{columns}
+\end{frame}
+\note{Ej. 3 usa cifras de COPEINCA, T1-2023. Para EXALMAR: B=52 000 ton, misma f=0.755, P≈39 200 ton, pérdida real ~47 000 ton, cobertura 83\%.}
+
+% ============================================================
+\secslide{05}{Probabilidad Anual de Excedencia}
+% ============================================================
+
+% ── Serie temporal SST ───────────────────────────────────────
+\begin{frame}{Serie temporal de anomalía SST por temporada}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.62\textheight,keepaspectratio]{\IMGPATH/step13_sst_timeseries.png}
+  \end{center}
+  {\scriptsize Anomalía SST media por temporada (Centro Norte, 2002--2026, MODIS AQUA). Se marcan los percentiles p90/p95/p99 calibrados sobre el período completo. El Niño 2015--2016 y 2023 superan el p95.}
+\end{frame}
+
+% ── Curva AEP ────────────────────────────────────────────────
+\begin{frame}{Curva de probabilidad anual de excedencia}
+  \begin{columns}[T]
+    \column{0.58\textwidth}
+      \includegraphics[width=\linewidth,height=0.65\textheight,keepaspectratio]{\IMGPATH/step13_bootstrap_aep.png}
+    \column{0.38\textwidth}
+      \textbf{Metodología}
+      \begin{itemize}
+        \item Ajuste Normal a anomalías SST estacionales
+        \item 4\,000 simulaciones bootstrap; IC 90\%
+      \end{itemize}
+      \smallskip
+      \textbf{Percentiles del trigger}
+      \begin{itemize}
+        \item p90 = $0{,}96^\circ$C ($\sim$10 años de retorno)
+        \item p95 = $1{,}38^\circ$C ($\sim$20 años)
+        \item p99 = $2{,}75^\circ$C ($\sim$100 años)
+      \end{itemize}
+      \smallskip
+      {\scriptsize T1 $\approx 0{,}97$ M ton; T2 $\approx 1{,}27$ M ton; total $\approx 2{,}24$ M ton (línea base, Centro).}
+  \end{columns}
+\end{frame}
+\note{Con solo ~23 años de datos MODIS, un bootstrap paramétrico (Normal) permite extrapolar la cola cálida. La distribución normal es conservadora en la cola superior; GEV o lognormal podrían explorarse si se quiere mayor peso en la cola. Ver Sección 7 de decisiones metodológicas.}
+
+% ============================================================
+\secslide{06}{Análisis por Empresa}
+% ============================================================
+
+% ── Resultados COPEINCA y EXALMAR ────────────────────────────
+\begin{frame}{COPEINCA y EXALMAR: análisis contrafactual}
+  \begin{center}
+    \includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]{\IMGPATH/step18_client_copeinca_exalmar_nosc.png}
+  \end{center}
+  {\tiny Barras azules: captura real; rojo: temporadas bajo línea base; amarillo: pago simulado. \textbf{COPEINCA} LB T1${=}132$\,kt, T2${=}118$\,kt.\ \ \textbf{EXALMAR} LB T1${=}52$\,kt, T2${=}49$\,kt. Panel inferior: anomalía SST estacional con umbrales de entrada y salida del trigger.}
+\end{frame}
+\note{El beta por empresa es solo informativo. El trigger SST y la fórmula de pago son idénticos para ambas: solo B (línea base) difiere. COPEINCA tiene menor R2 porque su flota opera en zonas más diversas. EXALMAR muestra mayor sensibilidad SST.}
+
+% ── Observaciones de riesgo base ─────────────────────────────
+\begin{frame}{Riesgo base: observaciones clave}
+  \framesubtitle{Patrones donde el trigger SST y la pérdida real divergen}
+  \begin{columns}[t]
+    \column{0.50\textwidth}
+      \textbf{\color{sgreen}T2-2018: falso trigger}
+      \begin{itemize}
+        \item SST = $+0{,}94^\circ$C, $f = 22\%$; sin pérdida real
+        \item COPEINCA $+38\%$, EXALMAR $+71\%$ sobre línea base
+      \end{itemize}
+      \textbf{\color{sgreen}T1-2023: El Niño severo}
+      \begin{itemize}
+        \item SST = $+2{,}01^\circ$C, $f = 75{,}5\%$
+        \item COPEINCA 6\%, EXALMAR 10\% de línea base
+        \item Cobertura $\sim80\%$; descubierto 20\%
+      \end{itemize}
+    \column{0.46\textwidth}
+      \textbf{Riesgo base estructural}
+      \begin{itemize}
+        \item Pérdidas en años fríos (cuotas IMARPE) no cubiertas
+        \item $R^{2}$ empresa 0{,}26--0{,}40: factores no-SST explican parte de la varianza
+        \item Ramp reduce sobreindemnización vs.\ step
+      \end{itemize}
+      \smallskip
+      {\scriptsize El producto cubre bien El Niño severo. Riesgo base moderado ($T' \in [0{,}5, 1{,}5]^\circ$C) es inherente a la estructura paramétrica.}
+  \end{columns}
+\end{frame}
+
+% ── Cierre ───────────────────────────────────────────────────
+{
+\setbeamertemplate{headline}{}
+\setbeamertemplate{footline}{}
+\setbeamercolor{background canvas}{bg=sdark}
+\begin{frame}[plain]
+  \vspace{1.4cm}
+  \hspace{0.4cm}{\color{white}\Huge\textbf{Gracias}}
+  \par\vspace{0.4cm}
+  \hspace{0.4cm}{\color{smidgray}\normalsize Seguro Paramétrico de Captura de Anchoveta Perú}
+  \par\vspace{0.3cm}
+  \hspace{0.4cm}{\color{sgray}\small suyana.io\ \ $\cdot$\ \ Confidencial\ \ $\cdot$\ \ Abril 2026}
+  \vfill
+  \hfill
+  \IfFileExists{\BRAND/logo_white.png}{%
+    \includegraphics[height=0.32cm]{\BRAND/logo_white.png}%
+  }{\textcolor{sgreen}{\tiny SUYANA}}%
+  \hspace{8pt}
+  \vspace{6pt}
+\end{frame}
+}
+
+\end{document}
