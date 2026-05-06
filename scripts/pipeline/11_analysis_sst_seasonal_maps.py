@@ -1,0 +1,255 @@
+"""
+Step 17 - Seasonal mean SST anomaly maps
+
+For each fishing season (T1 = Apr-Jul, DOY 91-212; T2 = Nov-Dec, DOY 305-365)
+and each year with available MODIS data, computes the spatial mean SST anomaly
+field and plots it as a choropleth map of the Peruvian coastal zone.
+
+The typical fishing corridor is overlaid as a polygon whose offshore (western)
+and inshore (eastern) edges are derived from the 5th and 95th percentiles of
+observed cala longitudes per 1-degree latitude band (calas_all_data.csv).
+The northern (-7.1 S) and southern (-15.8 S) limits are the IMARPE boundaries.
+
+Two output figures, one per season type:
+  - 11_analysis_sst_t1_maps.png : grid of T1 (primera temporada) maps, one per year
+  - 11_analysis_sst_t2_maps.png : grid of T2 (segunda temporada) maps, one per year
+
+Inputs:
+  FEATURES/sst_anomaly_daily_*.nc  (2002-2026)
+  OUTPUTS/calas_all_data.csv
+
+Outputs:
+  PLOTS/11_analysis_sst_t1_maps.png
+  PLOTS/11_analysis_sst_t2_maps.png
+
+Skip logic: skipped if both outputs already exist.
+"""
+import warnings
+warnings.filterwarnings("ignore")
+
+import numpy as np
+import glob
+import pandas as pd
+import xarray as xr
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+
+from config import FEATURES, OUTPUTS, PLOTS
+
+# ── seasons ───────────────────────────────────────────────────────────────────
+T1_DOY = (91,  212)   # Apr - Jul
+T2_DOY = (305, 365)   # Nov - Dec
+
+SEASON_META = {
+    "T1": {"doy": T1_DOY, "label": "1ra temporada  (Abr - Jul)"},
+    "T2": {"doy": T2_DOY, "label": "2da temporada  (Nov - Dic)"},
+}
+
+# ── map domain ────────────────────────────────────────────────────────────────
+LON_W, LON_E = -82.0, -74.0
+LAT_S, LAT_N = -16.0,  -5.0
+
+# ── fishing zone lat limits (IMARPE Centro) ───────────────────────────────────
+ZONE_LAT_S = -15.8
+ZONE_LAT_N =  -7.1
+
+# ── grid layout ───────────────────────────────────────────────────────────────
+# Drive layout by number of rows; columns fill automatically.
+NROWS = 3          # set to 2 for an even wider / more landscape figure
+
+
+# ── fishing zone polygon ──────────────────────────────────────────────────────
+def compute_fishing_polygon():
+    """
+    Build a closed polygon that outlines the typical fishing corridor.
+
+    Western edge: 5th percentile of observed cala longitudes per 1-deg lat band.
+    Eastern edge: 95th percentile of observed cala longitudes per 1-deg lat band.
+    North/south caps: horizontal lines at IMARPE boundaries.
+
+    Returns (poly_lons, poly_lats) as 1-D arrays ready for ax.plot / ax.fill.
+    """
+    df = pd.read_csv(OUTPUTS / "calas_all_data.csv",
+                     usecols=["latitud", "longitud"], low_memory=False)
+    df = df.rename(columns={"latitud": "lat", "longitud": "lon"}).dropna()
+    df = df[(df["lat"] >= ZONE_LAT_S) & (df["lat"] <= ZONE_LAT_N)]
+
+    band_lo_edges = np.arange(-15, -7, 1.0)   # -15, -14, ..., -8
+    band_centers  = band_lo_edges + 0.5        # -14.5, ..., -7.5
+
+    west_lons, east_lons, valid_lats = [], [], []
+
+    for lo, ctr in zip(band_lo_edges, band_centers):
+        hi   = lo + 1.0
+        band = df[(df["lat"] >= lo) & (df["lat"] < hi)]
+        if len(band) < 20:
+            continue
+        west_lons.append(np.percentile(band["lon"], 5))
+        east_lons.append(np.percentile(band["lon"], 95))
+        valid_lats.append(ctr)
+
+    west_lons  = np.array(west_lons)
+    east_lons  = np.array(east_lons)
+    valid_lats = np.array(valid_lats)
+
+    # Extend to the IMARPE lat boundaries by repeating the nearest band value
+    lat_full = np.concatenate([[ZONE_LAT_S], valid_lats, [ZONE_LAT_N]])
+    west_full = np.concatenate([[west_lons[0]], west_lons, [west_lons[-1]]])
+    east_full = np.concatenate([[east_lons[0]], east_lons, [east_lons[-1]]])
+
+    # Polygon: west side S->N, then east side N->S, closed
+    poly_lons = np.concatenate([west_full, east_full[::-1], [west_full[0]]])
+    poly_lats = np.concatenate([lat_full,  lat_full[::-1],  [lat_full[0]]])
+
+    return poly_lons, poly_lats
+
+
+# ── SST data loading ──────────────────────────────────────────────────────────
+def load_seasonal_means():
+    """
+    Returns {"T1": {year: DataArray(lat, lon)}, "T2": {...}}
+    """
+    files = sorted(glob.glob(str(FEATURES / "sst_anomaly_daily_*.nc")))
+    if not files:
+        raise FileNotFoundError(f"No sst_anomaly_daily_*.nc in {FEATURES}")
+
+    print(f"Loading {len(files)} SST anomaly files...")
+    ds = xr.open_mfdataset(files, combine="by_coords", chunks={"time": 30})
+    var = list(ds.data_vars)[0]
+
+    if "latitude" in ds.coords:
+        ds = ds.rename({"latitude": "lat", "longitude": "lon"})
+
+    da = ds[var]
+    years = sorted(set(int(y) for y in da.time.dt.year.values))
+
+    out = {"T1": {}, "T2": {}}
+
+    for year in years:
+        da_yr = da.sel(time=da.time.dt.year == year)
+        for sname, meta in SEASON_META.items():
+            doy_lo, doy_hi = meta["doy"]
+            doy = da_yr.time.dt.dayofyear
+            da_s = da_yr.isel(time=(doy >= doy_lo) & (doy <= doy_hi))
+            if len(da_s.time) < 5:
+                continue
+            mean_map = da_s.mean(dim="time").compute()
+            out[sname][year] = mean_map
+            print(f"  {sname} {year}: {len(da_s.time)} days")
+
+    return out
+
+
+# ── map grid ──────────────────────────────────────────────────────────────────
+def plot_season_grid(season_maps, sname, outpath, vmax, fishing_poly):
+    years  = sorted(season_maps.keys())
+    n      = len(years)
+    nrows  = NROWS
+    ncols  = int(np.ceil(n / nrows))
+
+    cmap = plt.cm.RdBu_r
+    norm = mcolors.TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
+    proj = ccrs.PlateCarree()
+
+    # Each panel: map domain 8° wide × 11° tall → natural aspect ~0.73.
+    # panel_w=3.4, panel_h=4.2 keeps that ratio while producing a landscape figure.
+    fig, axes = plt.subplots(
+        nrows, ncols,
+        figsize=(ncols * 3.4, nrows * 4.2),
+        subplot_kw={"projection": proj},
+        gridspec_kw={"hspace": 0.12, "wspace": 0.04},
+    )
+    axes_flat = np.array(axes).flatten()
+
+    poly_lons, poly_lats = fishing_poly
+
+    for i, year in enumerate(years):
+        ax  = axes_flat[i]
+        da  = season_maps[year]
+        lon = da.lon.values
+        lat = da.lat.values
+
+        ax.pcolormesh(lon, lat, da.values,
+                      cmap=cmap, norm=norm,
+                      transform=proj, shading="auto",
+                      rasterized=True)
+
+        ax.add_feature(cfeature.COASTLINE,
+                       linewidth=0.6, color="black", zorder=3)
+        ax.add_feature(cfeature.LAND,
+                       facecolor="#e8e8e8", zorder=2)
+        ax.set_extent([LON_W, LON_E, LAT_S, LAT_N], crs=proj)
+
+        # Fishing corridor outline
+        ax.plot(poly_lons, poly_lats,
+                transform=proj,
+                color="black", linewidth=0.9, linestyle="--",
+                zorder=4, alpha=0.9)
+
+        # Gridlines with labels on left column and bottom row only
+        is_left   = (i % ncols == 0)
+        is_bottom = (i >= (nrows - 1) * ncols)
+        gl = ax.gridlines(
+            draw_labels=True,
+            linewidth=0.25, color="grey", alpha=0.5,
+            xlocs=[-80, -76],
+            ylocs=[-14, -10, -6],
+        )
+        gl.top_labels    = False
+        gl.right_labels  = False
+        gl.left_labels   = is_left
+        gl.bottom_labels = is_bottom
+        gl.xlabel_style  = {"size": 5}
+        gl.ylabel_style  = {"size": 5}
+
+        ax.set_title(str(year), fontsize=9, pad=3)
+
+    # Hide empty slots
+    for j in range(i + 1, len(axes_flat)):
+        axes_flat[j].set_visible(False)
+
+    # Shared colorbar (vertical, right of the grid)
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])
+    cbar = fig.colorbar(sm,
+                        ax=axes_flat.tolist(),
+                        orientation="vertical",
+                        fraction=0.012, pad=0.02, shrink=0.6, aspect=25)
+    cbar.set_label("Anomalia SST media estacional ($^\\circ$C)", fontsize=9)
+    cbar.ax.tick_params(labelsize=7)
+
+    plt.savefig(outpath, dpi=150, bbox_inches="tight", pad_inches=0.05)
+    plt.close()
+    print(f"Saved -> {outpath}")
+
+
+# ── main ─────────────────────────────────────────────────────────────────────
+def main():
+    out_t1 = PLOTS / "11_analysis_sst_t1_maps.png"
+    out_t2 = PLOTS / "11_analysis_sst_t2_maps.png"
+
+    if out_t1.exists() and out_t2.exists():
+        print("step17 outputs exist -- skipping")
+        return
+
+    print("Computing fishing corridor polygon...")
+    fishing_poly = compute_fishing_polygon()
+
+    season_maps = load_seasonal_means()
+
+    vmax = 2.0
+    print(f"\nShared colour scale: +/-{vmax:.1f} deg C")
+
+    if not out_t1.exists():
+        print("\nPlotting T1 grid...")
+        plot_season_grid(season_maps["T1"], "T1", out_t1, vmax, fishing_poly)
+
+    if not out_t2.exists():
+        print("\nPlotting T2 grid...")
+        plot_season_grid(season_maps["T2"], "T2", out_t2, vmax, fishing_poly)
+
+
+if __name__ == "__main__":
+    main()
