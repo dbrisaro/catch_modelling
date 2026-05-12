@@ -79,9 +79,9 @@ Pipeline stages
   21    21_pricing_reinsurance                 outputs/21_reinsurance_analysis.md
                                               plots/21_reinsurance_aep.png
 
-  21b   21b_region_map                         plots/21b_region_map.png
+  22    22_pricing_region_map                   plots/21b_region_map.png
 
-  21c   21c_payout_curves                      plots/21c_payout_curves.png
+  23    23_pricing_payout_curves               plots/21c_payout_curves.png
 """
 import sys
 import argparse
@@ -115,14 +115,14 @@ STEPS = {
     "19":  "19_analysis_betas_by_region",
     "20":  "20_pricing_empresa_report",
     "21":  "21_pricing_reinsurance",
-    "21b": "21b_region_map",
-    "21c": "21c_payout_curves",
+    "22":  "22_pricing_region_map",
+    "23":  "23_pricing_payout_curves",
 }
 
 STEP_ORDER = [
     "01", "02", "03", "04", "05", "06", "07", "08",
     "09", "10", "11", "12", "13", "14", "15", "16",
-    "17", "18", "19", "20", "21", "21b", "21c",
+    "17", "18", "19", "20", "21", "22", "23",
 ]
 
 
