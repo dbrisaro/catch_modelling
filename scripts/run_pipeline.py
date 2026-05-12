@@ -11,129 +11,163 @@ Usage
     python run_pipeline.py
 
   Run specific steps only (space-separated numbers):
-    python run_pipeline.py --steps 2 3 5
+    python run_pipeline.py --steps 5 6 7
 
   Force re-run a step even if outputs exist:
-    python run_pipeline.py --force --steps 5
+    python run_pipeline.py --force --steps 7
+
+  List all steps:
+    python run_pipeline.py --list
 
 Pipeline stages
 ---------------
-  Step  Input(s)                              Output(s)
-  ----  ------                                --------
-  00    sources/hycom/hycom_*.nc              features/hycom_water_temp_daily_{year}.nc
+  Step  File                                  Output(s)
+  ----  ----                                  ---------
+  01    01_wrangling_hycom_resample_daily      features/hycom_water_temp_daily_{year}.nc
                                               features/hycom_salinity_daily_{year}.nc
 
-  01    features/hycom_water_temp_daily_*.nc  features/hycom_water_temp_climatology.nc
+  02    02_wrangling_hycom_temp_anomalies      features/hycom_water_temp_climatology.nc
                                               features/hycom_water_temp_anomaly_daily_{year}.nc
 
-  02    inputs/ihma_data/{year}/*.csv         outputs/calas_all_data.csv
-
-  03    outputs/calas_all_data.csv            outputs/calas_daily_with_coordinates.csv
-
-  04    sources/chl_peru/AQUA_MODIS.*.nc      features/chl_daily_{year}.nc
-                                              features/chl_climatology_doy.nc
-                                              features/chl_anomaly_daily_{year}.nc
-
-  04b   sources/sst_peru/AQUA_MODIS.*.nc      features/sst_daily_{year}.nc
+  03    03_wrangling_sst_modis_anomalies       features/sst_daily_{year}.nc
                                               features/sst_climatology_doy.nc
                                               features/sst_anomaly_daily_{year}.nc
 
-  05    outputs/calas_daily_with_coordinates  outputs/calas_enriched.csv
-        + all features/*.nc
+  04    04_wrangling_chl_modis_anomalies       features/chl_daily_{year}.nc
+                                              features/chl_climatology_doy.nc
+                                              features/chl_anomaly_daily_{year}.nc
 
-  06    outputs/calas_enriched.csv     (stdout: regression tables)
+  05    05_wrangling_calas_consolidation       outputs/calas_all_data.csv
 
-  07    outputs/calas_enriched.csv     outputs/step07_crossval.png
-        + features/*.nc
+  06    06_wrangling_calas_daily_aggregation   outputs/calas_daily_with_coordinates.csv
 
-  08    outputs/calas_all_data.csv            outputs/step08_vessel_density_by_season.png
-                                              outputs/step08_vessel_density_by_company.png
+  07    07_wrangling_calas_enrichment          outputs/calas_enriched.csv
 
-  09    outputs/calas_enriched.csv            outputs/step09_nino12_catch.png
-        + NOAA CPC URL (fallback embedded)
+  08    08_wrangling_catch_summary_by_region   outputs/catch_summary_by_region.csv
+                                              outputs/catch_summary_by_region.md
+                                              plots/08_wrangling_catch_timeseries.png
 
-  10    outputs/calas_enriched.csv            outputs/step10_sst_catch_scatter.png
+  09    09_analysis_hycom_modis_crossval       plots/09_analysis_hycom_modis_crossval.png
 
-  11    outputs/calas_enriched.csv            outputs/step11_ols_diagnostics.png
-        + NOAA CPC URL (fallback embedded)    outputs/step11_sst_partial_response.png
+  10    10_analysis_vessel_density_map         plots/10_analysis_vessel_density_by_season.png
+                                              plots/10_analysis_vessel_density_by_company.png
 
-  12    outputs/calas_enriched.csv            outputs/step12_tobit_decay.png
-        + features/sst_anomaly_daily_*.nc
-        + NOAA CPC URL (fallback embedded)
+  11    11_analysis_sst_seasonal_maps          plots/11_analysis_sst_t1_maps.png
+                                              plots/11_analysis_sst_t2_maps.png
 
-  13    outputs/calas_all_data.csv            outputs/step13_spatial_tobit.png
-        + features/SST_weekly_*.nc            outputs/step13_censure_map.png
-        + features/sst_anomaly_daily_*.nc     outputs/step13_sensitivity_domain.png
-                                              outputs/step13_by_region.png
+  12    12_analysis_sst_spatial_homogeneity    plots/12_analysis_sst_ridge.png
+                                              plots/12_analysis_sst_correlations.png
 
-  15    outputs/calas_enriched.csv            outputs/step15_spatial_comparison.png
-                                              outputs/step15_payout_curves.png
+  13    13_analysis_sst_catch_scatter          plots/13_analysis_sst_catch_scatter_norte.png
+                                              plots/13_analysis_sst_catch_scatter_centro.png
 
-  16    features/sst_anomaly_daily_*.nc       outputs/step16_sst_ridge.png
-                                              outputs/step16_sst_correlations.png
+  14    14_analysis_sst_catch_ols              plots/14_analysis_sst_catch_ols_betas.png
+
+  15    15_pricing_bootstrap_aep               plots/15_pricing_bootstrap_aep_ramp.png
+
+  16    16_pricing_trigger_design              plots/16_pricing_spatial_comparison.png
+                                              plots/16_pricing_payout_curves.png
+
+  17    17_pricing_baseline_report             outputs/report_baseline.md
+
+  18    18_pricing_document                    outputs/report_pricing_document.md
+
+  19    19_analysis_betas_by_region            outputs/betas_by_region.csv
+
+  20    20_pricing_empresa_report              outputs/report_pricing_{empresa}.md
+
+  21    21_pricing_reinsurance                 outputs/21_reinsurance_analysis.md
+                                              plots/21_reinsurance_aep.png
+
+  21b   21b_region_map                         plots/21b_region_map.png
+
+  21c   21c_payout_curves                      plots/21c_payout_curves.png
 """
 import sys
 import argparse
-import importlib
-import os
+import importlib.util
 from pathlib import Path
 
-# make pipeline package importable when run from the scripts/ directory
-SCRIPTS_DIR = Path(__file__).parent
-sys.path.insert(0, str(SCRIPTS_DIR / "pipeline"))
+SCRIPTS_DIR  = Path(__file__).parent
+PIPELINE_DIR = SCRIPTS_DIR / "pipeline"
 
+sys.path.insert(0, str(PIPELINE_DIR))
 
 STEPS = {
-    "00":  "step00_hycom_resample",
-    "01":  "step01_hycom_temp_anomalies",
-    "02":  "step02_calas_all_years",
-    "03":  "step03_calas_daily",
-    "04":  "step04_chl_data",
-    "04b": "step04b_sst_modis",
-    "05":  "step05_data_enrichment",
-    "06":  "step06_regression",
-    "07":  "step07_catch_habitat",
-    "08":  "step08_vessel_density",
-    "09":  "step09_enso_catch",
-    "10":  "step10_sst_scatter",
-    "11":  "step11_ols",
-    "13":  "step13_bootstrap_aep",
-    "15":  "step15_trigger_design",
-    "16":  "step16_sst_homogeneity",
-    "17":  "step17_seasonal_sst_maps",
-    "18":  "step18_client_company_analysis",
+    "01":  "01_wrangling_hycom_resample_daily",
+    "02":  "02_wrangling_hycom_temp_anomalies",
+    "03":  "03_wrangling_sst_modis_anomalies",
+    "04":  "04_wrangling_chl_modis_anomalies",
+    "05":  "05_wrangling_calas_consolidation",
+    "06":  "06_wrangling_calas_daily_aggregation",
+    "07":  "07_wrangling_calas_enrichment",
+    "08":  "08_wrangling_catch_summary_by_region",
+    "09":  "09_analysis_hycom_modis_crossval",
+    "10":  "10_analysis_vessel_density_map",
+    "11":  "11_analysis_sst_seasonal_maps",
+    "12":  "12_analysis_sst_spatial_homogeneity",
+    "13":  "13_analysis_sst_catch_scatter",
+    "14":  "14_analysis_sst_catch_ols",
+    "15":  "15_pricing_bootstrap_aep",
+    "16":  "16_pricing_trigger_design",
+    "17":  "17_pricing_baseline_report",
+    "18":  "18_pricing_document",
+    "19":  "19_analysis_betas_by_region",
+    "20":  "20_pricing_empresa_report",
+    "21":  "21_pricing_reinsurance",
+    "21b": "21b_region_map",
+    "21c": "21c_payout_curves",
 }
 
-STEP_ORDER = ["00", "01", "02", "03", "04", "04b", "05", "06", "07", "08", "09", "10", "11", "13", "15", "16", "17", "18"]
+STEP_ORDER = [
+    "01", "02", "03", "04", "05", "06", "07", "08",
+    "09", "10", "11", "12", "13", "14", "15", "16",
+    "17", "18", "19", "20", "21", "21b", "21c",
+]
+
+
+def _load_step(step_id):
+    filename = STEPS[step_id] + ".py"
+    file_path = PIPELINE_DIR / filename
+    spec = importlib.util.spec_from_file_location(f"_step_{step_id}", file_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def run_step(step_id, force=False):
-    module_name = STEPS[step_id]
+    filename = STEPS[step_id]
     print(f"\n{'='*65}")
-    print(f"  STEP {step_id:>3s}  {module_name}")
+    print(f"  STEP {step_id:>3s}  {filename}")
     print(f"{'='*65}")
-
     if force:
-        # remove skip-sentinel files so each step re-runs
-        # (steps implement their own skip logic by checking output files)
         print("  --force: step will overwrite existing outputs if applicable")
-
-    mod = importlib.import_module(module_name)
+    mod = _load_step(step_id)
     mod.main()
+
+
+def _normalise(s):
+    """Accept '1' -> '01', '21b' -> '21b', etc."""
+    if s in STEPS:
+        return s
+    padded = s.zfill(2)
+    if padded in STEPS:
+        return padded
+    return None
 
 
 def main():
     parser = argparse.ArgumentParser(description="Peru catch modeling pipeline")
     parser.add_argument(
         "--steps", nargs="+", metavar="STEP",
-        help="Steps to run (e.g. --steps 2 3 5). Defaults to all steps."
+        help="Steps to run (e.g. --steps 5 6 7). Defaults to all steps.",
     )
     parser.add_argument(
         "--force", action="store_true",
-        help="Hint to steps that they should re-run (individual steps may ignore this)."
+        help="Hint to steps that they should re-run (individual steps may ignore this).",
     )
     parser.add_argument(
-        "--list", action="store_true", help="List all steps and exit."
+        "--list", action="store_true", help="List all steps and exit.",
     )
     args = parser.parse_args()
 
@@ -144,17 +178,13 @@ def main():
         return
 
     if args.steps:
-        # normalise: accept '4' as '04', '4b' as '04b', etc.
-        selected = []
+        selected = set()
         for s in args.steps:
-            if s in STEPS:
-                selected.append(s)
-            elif s.zfill(2) in STEPS:
-                selected.append(s.zfill(2))
-            elif s.zfill(2).replace("0b", "b") in STEPS:
-                selected.append(s.zfill(2))
+            norm = _normalise(s)
+            if norm:
+                selected.add(norm)
             else:
-                print(f"Unknown step: {s} -- skipping")
+                print(f"Unknown step: {s} - skipping")
         steps_to_run = [s for s in STEP_ORDER if s in selected]
     else:
         steps_to_run = STEP_ORDER
