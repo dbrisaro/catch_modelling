@@ -7,9 +7,10 @@ from pyproj import datadir as _pj
 _pj.set_data_dir("/home/jupyter-daniela/.conda/envs/peru_environment/share/proj")
 
 # --- source data ---
-HYCOM_SRC = Path("/home/jupyter-daniela/suyana/sources/hycom")
-CHL_SRC   = Path("/home/jupyter-daniela/suyana/sources/chl_peru")
-SST_SRC   = Path("/home/jupyter-daniela/suyana/sources/sst_peru")
+HYCOM_SRC  = Path("/home/jupyter-daniela/suyana/sources/hycom")
+CHL_SRC    = Path("/home/jupyter-daniela/suyana/sources/chl_peru")
+SST_SRC    = Path("/home/jupyter-daniela/suyana/sources/sst_peru")
+OISSS_SRC  = Path("/home/jupyter-daniela/suyana/sources/OISSS")
 
 # --- processed data ---
 FEATURES  = Path("/home/jupyter-daniela/suyana/peru_production/features")
@@ -25,3 +26,4 @@ PLOTS.mkdir(parents=True, exist_ok=True)
 
 YEARS     = list(range(2015, 2026))
 SST_YEARS = list(range(2002, 2027))   # full MODIS AQUA record (2002 onwards)
+SSS_YEARS = list(range(2012, 2025))   # OISSS record (2011 incomplete, skip)
