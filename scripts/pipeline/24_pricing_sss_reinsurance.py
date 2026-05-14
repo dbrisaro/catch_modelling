@@ -57,6 +57,7 @@ REGIONS = [
 ]
 
 SCENARIOS = [
+    dict(key="p20", label="Entry p20", col="#43A047", marker="s"),
     dict(key="p10", label="Entry p10", col="#e07b39", marker="o"),
     dict(key="p05", label="Entry p05", col="#c0392b", marker="^"),
 ]
@@ -252,7 +253,7 @@ def aep_ci(values, n_chunks=20):
 def plot_aep_ramp(scenarios_data, total_baseline, out_path):
     fig, ax = plt.subplots(figsize=(9, 7))
 
-    ann_y = [0.76, 0.55]
+    ann_y = [0.82, 0.60, 0.38]
     for sc, ay in zip(scenarios_data, ann_y):
         ep_g, lo_g, med_g, hi_g = aep_ci(sc["pay_synth"])
         rate = sc["aal"] / total_baseline * 100
