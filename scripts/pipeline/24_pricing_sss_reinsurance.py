@@ -57,7 +57,7 @@ REGIONS = [
 ]
 
 SCENARIOS = [
-    dict(key="p20", label="Entry p20", col="#43A047", marker="s"),
+    dict(key="p20", label="Entry p20", col="#1B5E20", marker="s"),
     dict(key="p10", label="Entry p10", col="#e07b39", marker="o"),
     dict(key="p05", label="Entry p05", col="#c0392b", marker="^"),
 ]
@@ -250,10 +250,10 @@ def aep_ci(values, n_chunks=20):
 # AEP plot
 # ---------------------------------------------------------------------------
 
-def plot_aep_ramp(scenarios_data, total_baseline, out_path):
+def plot_aep_ramp(scenarios_data, total_baseline, out_path, ann_y=None):
+    if ann_y is None:
+        ann_y = [0.82, 0.60, 0.38]
     fig, ax = plt.subplots(figsize=(9, 7))
-
-    ann_y = [0.82, 0.60, 0.38]
     for sc, ay in zip(scenarios_data, ann_y):
         ep_g, lo_g, med_g, hi_g = aep_ci(sc["pay_synth"])
         rate = sc["aal"] / total_baseline * 100
@@ -407,9 +407,15 @@ def main():
             aal=aal,
         ))
 
-    # -- AEP plot --
-    out_aep = PLOTS / "21_reinsurance_sss_aep.png"
-    plot_aep_ramp(scenarios_data, program_ton, out_aep)
+    # -- AEP plot A: verde (p20) + naranja (p10) --
+    sc_A = [s for s in scenarios_data if s["key"] in ("p20", "p10")]
+    plot_aep_ramp(sc_A, program_ton, PLOTS / "21_reinsurance_sss_aep_A.png",
+                  ann_y=[0.76, 0.55])
+
+    # -- AEP plot B: naranja (p10) + rojo (p05) --
+    sc_B = [s for s in scenarios_data if s["key"] in ("p10", "p05")]
+    plot_aep_ramp(sc_B, program_ton, PLOTS / "21_reinsurance_sss_aep_B.png",
+                  ann_y=[0.76, 0.55])
 
     # -- markdown report --
     out_md = PLOTS / "21_reinsurance_sss_analysis.md"
