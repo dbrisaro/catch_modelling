@@ -14,8 +14,8 @@ Diferencias clave respecto al script 21 (SST):
   - Agregado: suma regional, cap en programa total
 
 Outputs:
-  outputs/24_reinsurance_sss_aep.png
-  outputs/24_reinsurance_sss_analysis.md
+  outputs/21_reinsurance_sss_aep.png
+  outputs/21_reinsurance_sss_analysis.md
 """
 
 import warnings
@@ -407,11 +407,11 @@ def main():
         ))
 
     # -- AEP plot --
-    out_aep = PLOTS / "24_reinsurance_sss_aep.png"
+    out_aep = PLOTS / "21_reinsurance_sss_aep.png"
     plot_aep_ramp(scenarios_data, program_ton, out_aep)
 
     # -- markdown report --
-    out_md = PLOTS / "24_reinsurance_sss_analysis.md"
+    out_md = PLOTS / "21_reinsurance_sss_analysis.md"
     lines  = [
         "# Analisis de reaseguro SSS - Portafolio agregado",
         "",
