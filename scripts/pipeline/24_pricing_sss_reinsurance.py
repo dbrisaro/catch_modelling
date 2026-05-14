@@ -57,8 +57,8 @@ REGIONS = [
 ]
 
 SCENARIOS = [
-    dict(key="p10", label="Entry p10", col="#3182bd", marker="o"),
-    dict(key="p05", label="Entry p05", col="#08519c", marker="^"),
+    dict(key="p10", label="Entry p10", col="#e07b39", marker="o"),
+    dict(key="p05", label="Entry p05", col="#c0392b", marker="^"),
 ]
 
 # ---------------------------------------------------------------------------
