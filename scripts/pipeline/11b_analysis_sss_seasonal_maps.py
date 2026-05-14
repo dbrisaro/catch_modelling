@@ -43,7 +43,7 @@ LON_W, LON_E   = -82.0, -74.0
 LAT_S, LAT_N   = -16.0,  -5.0
 ZONE_LAT_S     = -15.8
 ZONE_LAT_N     =  -7.1
-NROWS          = 3
+NROWS          = 2
 VMAX           = 0.40   # PSU, calibrado al p98 de anomalias observadas
 
 
